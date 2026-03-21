@@ -1,0 +1,33 @@
+name: Build LocalSend
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/.fvmrc
+
+      - name: Install dependencies
+        run: |
+          cd app
+          flutter pub get
+
+      - name: Build Windows
+        run: |
+          cd app
+          flutter build windows
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: localsend-windows
+          path: app/build/windows
