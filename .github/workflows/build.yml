@@ -1,33 +1,49 @@
 name: Build LocalSend
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-windows:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1. 拉取代码
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      # 2. 配置 C++ / MSBuild（Flutter Windows 必需）
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Setup Visual Studio environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # 3. 安装 Rust（LocalSend 需要）
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # 4. 安装 Flutter（不再使用 .fvmrc，避免报错）
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: app/.fvmrc
+          channel: stable
 
+      # 5. 获取依赖
       - name: Install dependencies
         run: |
           cd app
           flutter pub get
 
+      # 6. 编译 Windows
       - name: Build Windows
         run: |
           cd app
           flutter build windows
 
+      # 7. 上传编译结果（只上传可执行版本，体积更小）
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: localsend-windows
-          path: app/build/windows
+          path: app/build/windows/runner/Release
